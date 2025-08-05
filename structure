@@ -1,0 +1,14 @@
+go-grpc-purchase/
+├── proto/
+│   └── purchase.proto
+├── pb/
+│   └── (generated files from proto)
+├── db/
+│   └── models.go
+├── server/
+│   └── server.go
+├── config/
+│   └── config.go
+├── main.go
+├── go.mod
+├── go.sum

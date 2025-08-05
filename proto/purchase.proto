@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package purchase;
+
+option go_package = "github.com/atri/go-grpc-purchase/pb";
+
+service PurchaseService {
+  rpc AddPurchase (PurchaseRequest) returns (PurchaseResponse);
+  rpc GetPurchases (CustomerRequest) returns (PurchaseList);
+}
+
+message PurchaseRequest {
+  string customer_id = 1;
+  string product_id = 2;
+  int32 amount = 3;
+}
+
+message PurchaseResponse {
+  string status = 1;
+  string message = 2;
+}
+
+message CustomerRequest {
+  string customer_id = 1;
+}
+
+message Purchase {
+  string product_id = 1;
+  int32 amount = 2;
+  string date = 3;
+}
+
+message PurchaseList {
+  repeated Purchase purchases = 1;
+}
