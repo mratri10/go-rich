@@ -12,15 +12,35 @@ import (
 )
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(jwt.MapClaims)
-	username, ok := claims["username"].(string)
+	claims, ok := r.Context().Value("claims").(jwt.MapClaims)
 	if !ok {
-		http.Error(w, "Invalid Username in Token", http.StatusInternalServerError)
+		http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+		return
 	}
+
+	username, ok := claims["username"].(string)
+	userIDFloat, ok2 := claims["user_id"].(float64)
+
+	if !ok || !ok2 {
+		http.Error(w, "Invalid username or user_id in token", http.StatusUnauthorized)
+		return
+	}
+
+	userID := int(userIDFloat)
+
+	roleId, err := models.GetRoleUserByUserId(userID)
+	if err != nil || roleId <= 0 {
+		http.Error(w, "Role not set", http.StatusBadRequest)
+		return
+	}
+
 	data, err := models.GetUserByUsername(username)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
 
@@ -78,7 +98,12 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	user, err := models.UpdateUserByUsername(input.Username, input.Name, input.Password, int(adminId))
+	hash, err := utils.HashPassword(input.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	user, err := models.UpdateUserByUsername(input.Username, input.Name, hash, int(adminId))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

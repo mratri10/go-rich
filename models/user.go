@@ -12,6 +12,7 @@ type User struct {
 	Username string    `json:"username"`
 	AdminId  int       `json:"adminId"`
 	Name     string    `json:"name"`
+	Role     string    `json:"role"`
 	Password string    `json:"-"`
 	Created  time.Time `json:"created"`
 	Updated  time.Time `json:"updated"`
@@ -23,17 +24,36 @@ func CreatedUser(username, hashPassword, name string, adminId int) error {
 		username, hashPassword, name, adminId)
 	return err
 }
+func GetUserByUsernameForLogin(username string) (User, error) {
+	var u User
+	err := config.DB.QueryRow(context.Background(),
+		`select u.id,u.name, u.username,  u.password
+			from users u
+		WHERE u.username=$1`,
+		username).Scan(&u.ID, &u.Name, &u.Username, &u.Password)
+	println("000000000")
+	println(u.ID)
+	println(u.Name)
+	return u, err
+}
 
 func GetUserByUsername(username string) (User, error) {
 	var u User
 	err := config.DB.QueryRow(context.Background(),
-		"SELECT id,name, username FROM users WHERE username=$1",
-		username).Scan(&u.ID, &u.Name, &u.Username)
+		`select u.name, u.username, r.name as role, u.admin_id, u.id, u.created_at , u.updated_at 
+			from users u
+			join userrole ur on ur.user_id = u.id
+			join roles r on r.id = ur.role_id 
+		WHERE u.username=$1`,
+		username).Scan(&u.Name, &u.Username, &u.Role, &u.AdminId, &u.ID, &u.Updated, &u.Created)
 	return u, err
 }
 func GetUserAll() ([]User, error) {
 	rows, err := config.DB.Query(context.Background(),
-		"SELECT id, name, username, admin_id, created_at, updated_at from users")
+		`select u.name, u.username, r.name as role, u.admin_id, u.id, u.created_at , u.updated_at 
+			from users u
+			join userrole ur on ur.user_id = u.id
+			join roles r on r.id = ur.role_id`)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +62,7 @@ func GetUserAll() ([]User, error) {
 	var users []User
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Name, &u.Username, &u.AdminId, &u.Updated, &u.Created); err != nil {
+		if err := rows.Scan(&u.Name, &u.Username, &u.Role, &u.AdminId, &u.ID, &u.Updated, &u.Created); err != nil {
 			return nil, err
 		}
 		users = append(users, u)

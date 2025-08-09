@@ -39,11 +39,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
-	user, err := models.GetUserByUsername(input.Username)
+	user, err := models.GetUserByUsernameForLogin(input.Username)
+
 	if err != nil || !utils.CheckPasswordHash(input.Password, user.Password) {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		http.Error(w, "Invalid Username or Password", http.StatusUnauthorized)
 		return
 	}
+	println(user.ID)
 	token, err := utils.GenerateToken(user.ID, input.Username)
 	if err != nil {
 		http.Error(w, "Error generating token", http.StatusInternalServerError)

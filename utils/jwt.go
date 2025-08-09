@@ -9,6 +9,7 @@ import (
 var JwtSecret = []byte("rayasurinpassatri")
 
 func GenerateToken(userID int, username string) (string, error) {
+	println("+++++", userID)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  userID,
 		"username": username,

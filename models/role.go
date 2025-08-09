@@ -79,6 +79,17 @@ func CreateRoleUser(RoleId int, UserId int, AdminId int) error {
 	return err
 }
 
+func GetRoleUserByUserId(UserId int) (int, error) {
+	var roleId int
+	err := config.DB.QueryRow(context.Background(),
+		"Select role_id FROM userrole where user_id = ($1)",
+		UserId).Scan(&roleId)
+	if err != nil {
+		return 0, err
+	}
+	return roleId, err
+}
+
 func DeleteRoleUser(id int) error {
 	_, err := config.DB.Exec(context.Background(),
 		`DELETE FROM userrole where id=$id`, id)
