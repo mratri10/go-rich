@@ -1,37 +1,34 @@
 package main
 
 import (
-	"log"
-	"net"
+	"fmt"
+	"net/http"
 
-	_ "github.com/lib/pq"
-	"github.com/mratri10/go-rich/db"
-	"github.com/mratri10/go-rich/pb/github.com/atri/go-grpc-purchase/pb"
-	"github.com/mratri10/go-rich/server"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"github.com/go-chi/chi/v5"
+	"github.com/mratri10/go-rich/config"
+	"github.com/mratri10/go-rich/handlers"
+	"github.com/mratri10/go-rich/middleware"
 )
 
 func main() {
-	dbConn, err := db.NewDB("postgres://richman:glory_100jt@167.99.76.27:5432/richdb?sslmode=disable")
+	config.ConnectDB()
 
-	if err != nil {
-		log.Fatal("Database connection failed: ", err)
-	}
+	r := chi.NewRouter()
 
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatal("Failed to listen:", err)
-	}
+	r.Post("/register", handlers.RegisterHandler)
+	r.Post("/login", handlers.LoginHandler)
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterPurchaseServiceServer(grpcServer, &server.PurchaseServer{DB: dbConn})
+	r.Get("/profile", middleware.AuthMiddleware(handlers.ProfileHandler))
+	r.Get("/user/all", middleware.AuthMiddleware(handlers.UserAllHandler))
+	r.Post("/user/add", middleware.AuthMiddleware(handlers.CreateUserHandler))
+	r.Post("/user/update", middleware.AuthMiddleware(handlers.UpdateUserHandler))
+	r.Delete("/user/delete/{id}", middleware.AuthMiddleware(handlers.DeleteUser))
 
-	reflection.Register(grpcServer)
+	r.Get("/role", middleware.AuthMiddleware(handlers.GetRole))
+	r.Post("/role", middleware.AuthMiddleware(handlers.AddRole))
+	r.Put("/role/{id}", middleware.AuthMiddleware(handlers.UpdateRole))
+	r.Delete("/role/{id}", middleware.AuthMiddleware(handlers.DeleteRole))
 
-	log.Println("gRPC server started on port 50051")
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatal("Failed to serve: ", err)
-	}
+	fmt.Println("Server running on : 8080")
+	http.ListenAndServe(":8080", r)
 }
