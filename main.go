@@ -29,6 +29,16 @@ func main() {
 	r.Put("/role/{id}", middleware.AuthMiddleware(handlers.UpdateRole))
 	r.Delete("/role/{id}", middleware.AuthMiddleware(handlers.DeleteRole))
 
+	r.Get("/menu", middleware.AuthMiddleware(handlers.GetMenu))
+	r.Post("/menu", middleware.AuthMiddleware(handlers.AddMenu))
+	r.Put("/menu/{id}", middleware.AuthMiddleware(handlers.UpdateMenu))
+	r.Delete("/menu/{id}", middleware.AuthMiddleware(handlers.DeleteMenu))
+
+	r.Post("/menu/role", middleware.AuthMiddleware(handlers.AddRoleMenu))
+	r.Post("/role/user", middleware.AuthMiddleware(handlers.AddUserRole))
+	r.Delete("/role/user", middleware.AuthMiddleware(handlers.DeleteUserRole))
+	r.Delete("/menu/role", middleware.AuthMiddleware(handlers.DeleteRoleMenu))
+
 	fmt.Println("Server running on : 8080")
 	http.ListenAndServe(":8080", r)
 }

@@ -1,0 +1,7 @@
+{
+  "emojiFolderIcons.enabled": true,
+  "emojiFolderIcons.customMappings": {
+    "utils": "🚀",
+    "models": "🖥️"
+  }
+}
