@@ -8,9 +8,16 @@ import (
 	"github.com/mratri10/go-rich/config"
 	"github.com/mratri10/go-rich/handlers"
 	"github.com/mratri10/go-rich/middleware"
+	"github.com/rs/cors"
 )
 
 func main() {
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://167.99.76.27:8080/"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
 	config.ConnectDB()
 
 	r := chi.NewRouter()
@@ -18,27 +25,32 @@ func main() {
 	r.Post("/register", handlers.RegisterHandler)
 	r.Post("/login", handlers.LoginHandler)
 
-	r.Get("/profile", middleware.AuthMiddleware(handlers.ProfileHandler))
-	r.Get("/user/all", middleware.AuthMiddleware(handlers.UserAllHandler))
-	r.Post("/user/add", middleware.AuthMiddleware(handlers.CreateUserHandler))
-	r.Post("/user/update", middleware.AuthMiddleware(handlers.UpdateUserHandler))
-	r.Delete("/user/delete/{id}", middleware.AuthMiddleware(handlers.DeleteUser))
+	// Protected routes
+	r.Group(func(protected chi.Router) {
+		protected.Use(middleware.AuthMiddleware)
 
-	r.Get("/role", middleware.AuthMiddleware(handlers.GetRole))
-	r.Post("/role", middleware.AuthMiddleware(handlers.AddRole))
-	r.Put("/role/{id}", middleware.AuthMiddleware(handlers.UpdateRole))
-	r.Delete("/role/{id}", middleware.AuthMiddleware(handlers.DeleteRole))
+		protected.Get("/profile", handlers.ProfileHandler)
+		protected.Get("/user/all", handlers.UserAllHandler)
+		protected.Post("/user/add", handlers.CreateUserHandler)
+		protected.Post("/user/update", handlers.UpdateUserHandler)
+		protected.Delete("/user/delete/{id}", handlers.DeleteUser)
 
-	r.Get("/menu", middleware.AuthMiddleware(handlers.GetMenu))
-	r.Post("/menu", middleware.AuthMiddleware(handlers.AddMenu))
-	r.Put("/menu/{id}", middleware.AuthMiddleware(handlers.UpdateMenu))
-	r.Delete("/menu/{id}", middleware.AuthMiddleware(handlers.DeleteMenu))
+		protected.Get("/role", handlers.GetRole)
+		protected.Post("/role", handlers.AddRole)
+		protected.Put("/role/{id}", handlers.UpdateRole)
+		protected.Delete("/role/{id}", handlers.DeleteRole)
 
-	r.Post("/menu/role", middleware.AuthMiddleware(handlers.AddRoleMenu))
-	r.Post("/role/user", middleware.AuthMiddleware(handlers.AddUserRole))
-	r.Delete("/role/user", middleware.AuthMiddleware(handlers.DeleteUserRole))
-	r.Delete("/menu/role", middleware.AuthMiddleware(handlers.DeleteRoleMenu))
+		protected.Get("/menu", handlers.GetMenu)
+		protected.Post("/menu", handlers.AddMenu)
+		protected.Put("/menu/{id}", handlers.UpdateMenu)
+		protected.Delete("/menu/{id}", handlers.DeleteMenu)
+
+		protected.Post("/menu/role", handlers.AddRoleMenu)
+		protected.Post("/role/user", handlers.AddUserRole)
+		protected.Delete("/role/user", handlers.DeleteUserRole)
+		protected.Delete("/menu/role", handlers.DeleteRoleMenu)
+	})
 
 	fmt.Println("Server running on : 8080")
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", c.Handler(r))
 }
