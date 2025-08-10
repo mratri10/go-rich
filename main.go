@@ -13,7 +13,7 @@ import (
 
 func main() {
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://167.99.76.27:8080"},
+		AllowedOrigins:   []string{"http://localhost:8080"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
